@@ -4,8 +4,10 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.TextView;
 
 import org.conscrypt.Conscrypt;
+import org.w3c.dom.Text;
 
 import java.io.IOException;
 import java.security.Provider;
@@ -27,10 +29,15 @@ import okhttp3.TlsVersion;
 
 public class MainActivity extends AppCompatActivity {
     String LOG = "ABOBA";
+    TextView mainText;
+    TextView errorText;
+    String suite;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        mainText = findViewById(R.id.Maintext);
+        errorText = findViewById(R.id.textError);
         Provider conscrypt = Conscrypt.newProvider();
 
 // Add as provider
@@ -59,6 +66,7 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception e) {
             e.printStackTrace();
             Log.d(LOG,e.toString());
+            errorText.setText(e.toString());
         }
 
 // Build OkHttp
@@ -74,16 +82,37 @@ public class MainActivity extends AppCompatActivity {
                         Log.d(LOG, call.toString());
                         e.printStackTrace();
                         Log.d(LOG, e.toString());
+                        runOnUiThread(new Runnable() {
+
+                            @Override
+                            public void run() {
+
+                                errorText.setText(e.toString());
+
+                            }
+                        });
+
                     }
 
                     @Override
                     public void onResponse(Call call,final Response response) throws IOException {
                         Log.d(LOG, "onResponse() tlsVersion=" + response.handshake().tlsVersion());
                         Log.d(LOG, "onResponse() cipherSuite=" + response.handshake().cipherSuite().toString());
+                        runOnUiThread(new Runnable() {
+
+                            @Override
+                            public void run() {
+
+                                mainText.setText("onResponse() cipherSuite=" + response.handshake().cipherSuite().toString());
+
+
+                            }
+                        });
                         // D/TestApp##: onResponse() tlsVersion=TLS_1_3
                         // D/TestApp##: onResponse() cipherSuite=TLS_AES_256_GCM_SHA384
                     }
                 });
+
 /*
         try {
             ConnectionSpec spec = new ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS)
